@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦅 한화 이글스 야구</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700&display=swap');
+
+  :root {
+    --orange: #FF6600;
+    --dark-orange: #CC4400;
+    --black: #111111;
+    --dark: #1a1a1a;
+    --panel: #222222;
+    --text: #f0f0f0;
+    --muted: #888;
+    --strike: #FF6600;
+    --ball: #44aaff;
+    --out: #ff4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--dark-orange), var(--orange));
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 20px rgba(255,102,0,0.4);
+  }
+  header h1 {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  }
+  .inning-display {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    font-weight: 700;
+  }
+
+  /* SCOREBOARD */
+  .scoreboard {
+    background: var(--panel);
+    margin: 16px;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #333;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .team-score {
+    text-align: center;
+  }
+  .team-name {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 1rem;
+    color: var(--orange);
+    margin-bottom: 4px;
+  }
+  .score-num {
+    font-size: 2.8rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .score-divider {
+    width: 1px;
+    background: #444;
+    margin: 0 auto;
+  }
+
+  /* COUNT DISPLAY */
+  .count-bar {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    padding: 8px 16px;
+    background: var(--dark);
+  }
+  .count-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .count-dots {
+    display: flex;
+    gap: 4px;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #555;
+    transition: all 0.2s;
+  }
+  .dot.strike { background: var(--strike); border-color: var(--strike); }
+  .dot.ball { background: var(--ball); border-color: var(--ball); }
+  .dot.out { background: var(--out); border-color: var(--out); }
+
+  /* BASES */
+  .bases-display {
+    display: flex;
+    justify-content: center;
+    padding: 8px;
+  }
+  .diamond {
+    position: relative;
+    width: 80px;
+    height: 80px;
+  }
+  .base {
+    width: 18px;
+    height: 18px;
+    background: #333;
+    border: 2px solid #555;
+    position: absolute;
+    transform: rotate(45deg);
+    transition: all 0.3s;
+  }
+  .base.on { background: var(--orange); border-color: var(--orange); box-shadow: 0 0 10px var(--orange); }
+  .base-1 { right: 0; top: 50%; transform: translateY(-50%) rotate(45deg); }
+  .base-2 { top: 0; left: 50%; transform: translateX(-50%) rotate(45deg); }
+  .base-3 { left: 0; top: 50%; transform: translateY(-50%) rotate(45deg); }
+  .home { bottom: 0; left: 50%; transform: translateX(-50%) rotate(45deg); background: #555; }
+
+  /* MAIN GAME AREA */
+  .game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 16px 16px;
+    gap: 16px;
+  }
+
+  /* PITCHER PANEL */
+  .pitcher-panel, .batter-panel {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 16px;
+    width: 100%;
+    border: 1px solid #333;
+  }
+  .panel-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--orange);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .player-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .player-stats {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* PITCH TYPE BUTTONS */
+  .pitch-types {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .pitch-btn {
+    padding: 8px 4px;
+    border: 2px solid #444;
+    background: #2a2a2a;
+    color: var(--text);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .pitch-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .pitch-btn.selected { background: var(--orange); border-color: var(--orange); color: white; }
+
+  /* STRIKE ZONE */
+  .zone-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .zone-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  #strikeZone {
+    border: 3px solid var(--orange);
+    border-radius: 4px;
+    cursor: crosshair;
+    background: rgba(255,102,0,0.05);
+    display: block;
+  }
+  #strikeZone:hover { background: rgba(255,102,0,0.1); }
+
+  /* THROW BUTTON */
+  .action-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--dark-orange), var(--orange));
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 15px rgba(255,102,0,0.3);
+  }
+  .action-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,102,0,0.5); }
+  .action-btn:active { transform: translateY(0); }
+  .action-btn:disabled { background: #444; box-shadow: none; cursor: not-allowed; transform: none; }
+
+  /* BATTER CONTROLS */
+  .batter-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .control-group label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .toggle-btns {
+    display: flex;
+    gap: 4px;
+  }
+  .toggle-btn {
+    flex: 1;
+    padding: 7px 4px;
+    border: 2px solid #444;
+    background: #2a2a2a;
+    color: var(--text);
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .toggle-btn.selected { background: var(--orange); border-color: var(--orange); }
+
+  /* TIMING BAR */
+  .timing-section {
+    margin-top: 4px;
+  }
+  .timing-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .timing-bar-container {
+    position: relative;
+    height: 36px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    border: 2px solid #444;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .timing-perfect-zone {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: rgba(255,102,0,0.3);
+    border-left: 2px solid var(--orange);
+    border-right: 2px solid var(--orange);
+    transition: left 0.05s;
+  }
+  .timing-marker {
+    position: absolute;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: white;
+    border-radius: 2px;
+    transition: left 0.05s linear;
+    box-shadow: 0 0 8px rgba(255,255,255,0.8);
+  }
+  .timing-hint {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* RESULT POPUP */
+  .result-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .result-overlay.show { opacity: 1; pointer-events: all; }
+  .result-card {
+    background: var(--panel);
+    border-radius: 20px;
+    padding: 32px 48px;
+    text-align: center;
+    border: 3px solid var(--orange);
+    box-shadow: 0 0 40px rgba(255,102,0,0.4);
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .result-overlay.show .result-card { transform: scale(1); }
+  .result-emoji { font-size: 3rem; margin-bottom: 8px; }
+  .result-text {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 2rem;
+    color: var(--orange);
+    margin-bottom: 4px;
+  }
+  .result-sub { font-size: 0.9rem; color: var(--muted); }
+
+  /* PITCH FLIGHT CANVAS */
+  #pitchCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  /* LOG */
+  .game-log {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 12px 16px;
+    width: 100%;
+    border: 1px solid #333;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .log-title {
+    font-size: 0.75rem;
+    color: var(--orange);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .log-entry {
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding: 2px 0;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  .log-entry:last-child { border-bottom: none; color: var(--text); }
+
+  /* STATE LABELS */
+  .phase-label {
+    font-size: 0.7rem;
+    color: var(--orange);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .hidden { display: none !important; }
+
+  /* PITCH FLYING ANIMATION on zone canvas */
+  .pitch-dot {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 10px white;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🦅 한화 이글스 야구</h1>
+  <div class="inning-display" id="inningDisplay">1회 초</div>
+</header>
+
+<!-- Scoreboard -->
+<div class="scoreboard">
+  <div class="team-score">
+    <div class="team-name">🦅 1P</div>
+    <div class="score-num" id="score1">0</div>
+  </div>
+  <div class="score-divider"></div>
+  <div class="team-score">
+    <div class="team-name">🦅 2P</div>
+    <div class="score-num" id="score2">0</div>
+  </div>
+</div>
+
+<!-- Count & Bases -->
+<div class="count-bar">
+  <div class="count-item">
+    <span>볼</span>
+    <div class="count-dots" id="ballDots">
+      <div class="dot" id="b0"></div>
+      <div class="dot" id="b1"></div>
+      <div class="dot" id="b2"></div>
+      <div class="dot" id="b3"></div>
+    </div>
+  </div>
+  <div class="bases-display">
+    <div class="diamond">
+      <div class="base base-1" id="base1"></div>
+      <div class="base base-2" id="base2"></div>
+      <div class="base base-3" id="base3"></div>
+      <div class="base home"></div>
+    </div>
+  </div>
+  <div class="count-item">
+    <span>스트라이크</span>
+    <div class="count-dots" id="strikeDots">
+      <div class="dot" id="s0"></div>
+      <div class="dot" id="s1"></div>
+    </div>
+  </div>
+</div>
+<div class="count-bar" style="padding-top:0;">
+  <div class="count-item">
+    아웃
+    <div class="count-dots">
+      <div class="dot" id="o0"></div>
+      <div class="dot" id="o1"></div>
+    </div>
+  </div>
+</div>
+
+<div class="game-area">
+
+  <!-- PITCHER PANEL -->
+  <div class="pitcher-panel" id="pitcherPanel">
+    <div class="panel-title">⚾ 투수 조작</div>
+    <div class="player-name" id="pitcherName">류현진</div>
+    <div class="player-stats" id="pitcherStats">구속 72 | 변화 85 | 구위 83 | 제구 88</div>
+
+    <div id="phasePickType">
+      <div class="phase-label">① 구종을 선택하세요</div>
+      <div class="pitch-types" id="pitchTypeButtons"></div>
+    </div>
+
+    <div id="phasePickZone" class="hidden">
+      <div class="phase-label">② 코스를 클릭하세요</div>
+      <div class="zone-container">
+        <div class="zone-label">스트라이크 존</div>
+        <canvas id="strikeZone" width="180" height="180"></canvas>
+      </div>
+    </div>
+
+    <div id="phaseThrow" class="hidden">
+      <button class="action-btn" id="throwBtn" onclick="throwPitch()">⚾ 투구!</button>
+    </div>
+  </div>
+
+  <!-- BATTER PANEL -->
+  <div class="batter-panel" id="batterPanel">
+    <div class="panel-title">🏏 타자 조작</div>
+    <div class="player-name" id="batterName">노시환</div>
+    <div class="player-stats" id="batterStats">파워 82 | 정확 71 | 선구 72 | 주루 55</div>
+
+    <div id="phaseBatterSet">
+      <div class="batter-controls">
+        <div class="control-group">
+          <label>높낮이</label>
+          <div class="toggle-btns">
+            <button class="toggle-btn selected" id="highBtn" onclick="setHeight('high')">높게</button>
+            <button class="toggle-btn" id="midBtn" onclick="setHeight('mid')">중간</button>
+            <button class="toggle-btn" id="lowBtn" onclick="setHeight('low')">낮게</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>방향</label>
+          <div class="toggle-btns">
+            <button class="toggle-btn selected" id="pullBtn" onclick="setDir('pull')">당겨</button>
+            <button class="toggle-btn" id="straightBtn" onclick="setDir('straight')">중간</button>
+            <button class="toggle-btn" id="pushBtn" onclick="setDir('push')">밀어</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="phaseTimingWait" class="hidden">
+      <div class="phase-label">⚾ 공이 날아옵니다...</div>
+      <div class="timing-section">
+        <div class="timing-label">타이밍</div>
+        <div class="timing-bar-container" id="timingBar" onclick="swing()">
+          <div class="timing-perfect-zone" id="perfectZone"></div>
+          <div class="timing-marker" id="timingMarker"></div>
+        </div>
+        <div class="timing-hint">클릭하여 스윙!</div>
+      </div>
+    </div>
+
+    <div id="phaseWaiting">
+      <div style="text-align:center; color:var(--muted); font-size:0.85rem; padding:16px 0;">
+        투수 차례를 기다리는 중...
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME LOG -->
+  <div class="game-log">
+    <div class="log-title">📋 경기 기록</div>
+    <div id="logEntries"></div>
+  </div>
+
+</div>
+
+<!-- Result Overlay -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-card">
+    <div class="result-emoji" id="resultEmoji">⚾</div>
+    <div class="result-text" id="resultText">안타!</div>
+    <div class="result-sub" id="resultSub">잘 쳤어요</div>
+  </div>
+</div>
+
+<canvas id="pitchCanvas"></canvas>
+
+<script>
+// ===== 선수 데이터 (나중에 실제 한화 선수로 교체) =====
+const PLAYERS = {
+  pitchers: [
+    { name: "류현진", speed: 72, curve: 85, power: 83, control: 88,
+      pitches: ["직구","커브","체인지업","슬라이더","싱커"] },
+    { name: "문동환", speed: 78, curve: 72, power: 75, control: 71,
+      pitches: ["직구","슬라이더","체인지업"] },
+    { name: "김서현", speed: 82, curve: 68, power: 80, control: 65,
+      pitches: ["직구","슬라이더","커브"] },
+  ],
+  batters: [
+    { name: "노시환", power: 82, contact: 71, eye: 72, speed: 55 },
+    { name: "채은성", power: 74, contact: 78, eye: 75, speed: 62 },
+    { name: "페라자", power: 85, contact: 68, eye: 65, speed: 58 },
+  ]
+};
+
+// ===== 게임 상태 =====
+const state = {
+  inning: 1, half: 0, // half: 0=초, 1=말
+  outs: 0, strikes: 0, balls: 0,
+  bases: [false, false, false], // 1루,2루,3루
+  scores: [0, 0],
+  currentPitcher: PLAYERS.pitchers[0],
+  currentBatter: PLAYERS.batters[0],
+  batterIndex: 0,
+  selectedPitch: null,
+  targetX: null, targetY: null,
+  batterHeight: 'high',
+  batterDir: 'pull',
+  phase: 'pitcher_type', // pitcher_type → pitcher_zone → pitcher_throw → batter_timing
+  timingInterval: null,
+  markerPos: 0,
+  markerDir: 1,
+  pitchInFlight: false,
+};
+
+// ===== INIT =====
+function init() {
+  renderPitchTypes();
+  updateUI();
+  drawZone();
+}
+
+function renderPitchTypes() {
+  const container = document.getElementById('pitchTypeButtons');
+  container.innerHTML = '';
+  state.currentPitcher.pitches.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'pitch-btn';
+    btn.textContent = p;
+    btn.onclick = () => selectPitch(p);
+    container.appendChild(btn);
+  });
+}
+
+// ===== PHASE MANAGEMENT =====
+function setPhase(phase) {
+  state.phase = phase;
+  // pitcher phases
+  document.getElementById('phasePickType').classList.toggle('hidden', phase !== 'pitcher_type');
+  document.getElementById('phasePickZone').classList.toggle('hidden', phase !== 'pitcher_zone');
+  document.getElementById('phaseThrow').classList.toggle('hidden', phase !== 'pitcher_throw');
+  // batter phases
+  document.getElementById('phaseBatterSet').classList.toggle('hidden', phase === 'batter_timing');
+  document.getElementById('phaseTimingWait').classList.toggle('hidden', phase !== 'batter_timing');
+  document.getElementById('phaseWaiting').classList.toggle('hidden', phase !== 'pitcher_type' && phase !== 'pitcher_zone' && phase !== 'pitcher_throw');
+
+  if (phase === 'batter_timing') {
+    document.getElementById('phaseWaiting').classList.add('hidden');
+    startTimingBar();
+  }
+}
+
+// ===== PITCH TYPE =====
+function selectPitch(type) {
+  state.selectedPitch = type;
+  document.querySelectorAll('.pitch-btn').forEach(b => {
+    b.classList.toggle('selected', b.textContent === type);
+  });
+  setPhase('pitcher_zone');
+  drawZone();
+}
+
+// ===== STRIKE ZONE =====
+function drawZone(targetX, targetY, actualX, actualY) {
+  const canvas = document.getElementById('strikeZone');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,102,0,0.2)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 3; i++) {
+    ctx.beginPath(); ctx.moveTo(w/3*i, 0); ctx.lineTo(w/3*i, h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, h/3*i); ctx.lineTo(w, h/3*i); ctx.stroke();
+  }
+
+  // Zone labels
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.font = '10px Noto Sans KR';
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.textAlign = 'center';
+
+  if (targetX !== undefined) {
+    // Target dot
+    ctx.beginPath();
+    ctx.arc(targetX, targetY, 8, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,102,0,0.5)';
+    ctx.fill();
+    ctx.strokeStyle = 'var(--orange)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    if (actualX !== undefined) {
+      // Actual landing
+      ctx.beginPath();
+      ctx.arc(actualX, actualY, 6, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fill();
+      // Line between
+      ctx.beginPath();
+      ctx.moveTo(targetX, targetY);
+      ctx.lineTo(actualX, actualY);
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+}
+
+document.getElementById('strikeZone').addEventListener('click', function(e) {
+  if (state.phase !== 'pitcher_zone') return;
+  const rect = this.getBoundingClientRect();
+  state.targetX = e.clientX - rect.left;
+  state.targetY = e.clientY - rect.top;
+  drawZone(state.targetX, state.targetY);
+  setPhase('pitcher_throw');
+});
+
+// ===== THROW =====
+function throwPitch() {
+  if (state.phase !== 'pitcher_throw') return;
+
+  // Apply control scatter (제구력 기반 오차)
+  const controlFactor = (100 - state.currentPitcher.control) / 100;
+  const scatter = controlFactor * 30;
+  state.actualX = state.targetX + (Math.random()-0.5)*scatter*2;
+  state.actualY = state.targetY + (Math.random()-0.5)*scatter*2;
+  // Clamp
+  state.actualX = Math.max(10, Math.min(170, state.actualX));
+  state.actualY = Math.max(10, Math.min(170, state.actualY));
+
+  // Show actual on zone
+  drawZone(state.targetX, state.targetY, state.actualX, state.actualY);
+
+  // Determine if strike zone (roughly middle 60%)
+  const inStrike = state.actualX > 30 && state.actualX < 150 &&
+                   state.actualY > 30 && state.actualY < 150;
+  state.pitchInStrike = inStrike;
+
+  setPhase('batter_timing');
+}
+
+// ===== TIMING BAR =====
+function startTimingBar() {
+  // Perfect zone position based on pitch speed
+  const speedFactor = state.currentPitcher.speed / 100;
+  const zoneWidth = Math.max(15, 40 - speedFactor * 20); // faster = narrower
+  const barWidth = 100;
+  const zoneLeft = Math.random() * (barWidth - zoneWidth);
+
+  const pz = document.getElementById('perfectZone');
+  pz.style.left = zoneLeft + '%';
+  pz.style.width = zoneWidth + '%';
+  state.perfectLeft = zoneLeft;
+  state.perfectRight = zoneLeft + zoneWidth;
+  state.perfectZoneWidth = zoneWidth;
+
+  state.markerPos = 0;
+  state.markerDir = 1;
+  const speed = 0.8 + speedFactor * 0.7; // faster pitch = faster marker
+
+  clearInterval(state.timingInterval);
+  state.timingInterval = setInterval(() => {
+    state.markerPos += state.markerDir * speed;
+    if (state.markerPos >= 100) { state.markerPos = 100; state.markerDir = -1; }
+    if (state.markerPos <= 0) { state.markerPos = 0; state.markerDir = 1; }
+    document.getElementById('timingMarker').style.left = state.markerPos + '%';
+  }, 16);
+}
+
+function swing() {
+  if (state.phase !== 'batter_timing') return;
+  clearInterval(state.timingInterval);
+
+  const markerPos = state.markerPos;
+  const inPerfect = markerPos >= state.perfectLeft && markerPos <= state.perfectRight;
+  const nearPerfect = markerPos >= state.perfectLeft - 8 && markerPos <= state.perfectRight + 8;
+
+  // Timing quality
+  let timingScore;
+  if (inPerfect) timingScore = 1.0;
+  else if (nearPerfect) timingScore = 0.6;
+  else timingScore = 0.2;
+
+  // Contact accuracy factor (정확 능력치)
+  const contactFactor = state.currentBatter.contact / 100;
+  const powerFactor = state.currentBatter.power / 100;
+
+  // Was it a strike?
+  const inStrike = state.pitchInStrike;
+
+  // Calculate result
+  const finalScore = timingScore * (0.7 + contactFactor * 0.3);
+  determineResult(finalScore, inStrike, timingScore);
+}
+
+// ===== RESULT =====
+function determineResult(score, inStrike, timingScore) {
+  const power = state.currentBatter.power;
+  let result, emoji, sub;
+
+  if (timingScore < 0.3 && !inStrike) {
+    // Way off timing on a ball
+    if (Math.random() < 0.4) {
+      result = '볼';
+      emoji = '😅';
+      sub = '스트라이크 존 밖이에요';
+      addBall();
+      showResult(emoji, result, sub);
+      return;
+    }
+  }
+
+  if (score >= 0.85) {
+    if (power >= 80 && Math.random() < 0.3) {
+      result = '홈런!'; emoji = '💥'; sub = '담장을 넘어갔습니다!';
+    } else if (power >= 70 && Math.random() < 0.4) {
+      result = '장타!'; emoji = '🔥'; sub = '2루타 이상입니다!';
+    } else {
+      result = '안타!'; emoji = '✅'; sub = '깨끗한 안타입니다!';
+    }
+  } else if (score >= 0.55) {
+    if (Math.random() < 0.5) {
+      result = '안타!'; emoji = '✅'; sub = '내야 안타 혹은 단타';
+    } else {
+      result = '파울'; emoji = '↗️'; sub = '파울볼입니다';
+    }
+  } else if (score >= 0.3) {
+    result = '파울'; emoji = '↗️'; sub = '파울볼입니다';
+  } else {
+    result = '헛스윙!'; emoji = '💨'; sub = '스트라이크입니다';
+  }
+
+  // Apply result to game state
+  applyResult(result);
+  showResult(emoji, result, sub);
+}
+
+function applyResult(result) {
+  const log = { '홈런!': '홈런', '장타!': '2루타', '안타!': '안타', '파울': '파울', '헛스윙!': '헛스윙', '볼': '볼' };
+  addLog(`${state.currentBatter.name} - ${log[result] || result}`);
+
+  if (result === '홈런!') {
+    let runs = 1;
+    state.bases.forEach((b,i) => { if(b) runs++; });
+    state.scores[state.half] += runs;
+    state.bases = [false,false,false];
+    nextBatter();
+  } else if (result === '장타!') {
+    // 주자 정리 (간단히)
+    if(state.bases[0]) state.scores[state.half]++;
+    if(state.bases[1]) state.scores[state.half]++;
+    state.bases = [false, true, false];
+    nextBatter();
+  } else if (result === '안타!') {
+    if(state.bases[1]) state.scores[state.half]++;
+    state.bases[1] = state.bases[0];
+    state.bases[0] = true;
+    nextBatter();
+  } else if (result === '헛스윙!' || (!state.pitchInStrike && result === '헛스윙!')) {
+    addStrike();
+    return;
+  } else if (result === '파울') {
+    if (state.strikes < 2) addStrike();
+    // 2 스트라이크면 파울은 스트라이크 안됨
+    return;
+  } else if (result === '볼') {
+    // already handled
+    return;
+  }
+
+  state.strikes = 0;
+  state.balls = 0;
+  setPhase('pitcher_type');
+  updateUI();
+}
+
+function addStrike() {
+  state.strikes++;
+  if (state.strikes >= 3) {
+    addLog(`${state.currentBatter.name} - 삼진 아웃!`);
+    state.strikes = 0; state.balls = 0;
+    addOut();
+  } else {
+    setPhase('pitcher_type');
+    updateUI();
+  }
+}
+
+function addBall() {
+  state.balls++;
+  if (state.balls >= 4) {
+    addLog(`${state.currentBatter.name} - 볼넷!`);
+    // 주자 밀기
+    if(state.bases[2] && state.bases[1] && state.bases[0]) state.scores[state.half]++;
+    state.bases[2] = state.bases[1] && state.bases[0] ? true : state.bases[2];
+    state.bases[1] = state.bases[0] ? true : state.bases[1];
+    state.bases[0] = true;
+    state.strikes = 0; state.balls = 0;
+    nextBatter();
+  } else {
+    setPhase('pitcher_type');
+    updateUI();
+  }
+}
+
+function addOut() {
+  state.outs++;
+  if (state.outs >= 3) {
+    state.outs = 0;
+    state.bases = [false,false,false];
+    if (state.half === 0) {
+      state.half = 1;
+    } else {
+      state.half = 0;
+      state.inning++;
+      if (state.inning > 9) {
+        endGame();
+        return;
+      }
+    }
+    addLog(`--- ${state.inning}회 ${state.half === 0 ? '초' : '말'} ---`);
+  }
+  setPhase('pitcher_type');
+  updateUI();
+}
+
+function nextBatter() {
+  state.batterIndex = (state.batterIndex + 1) % PLAYERS.batters.length;
+  state.currentBatter = PLAYERS.batters[state.batterIndex];
+}
+
+// ===== UI UPDATE =====
+function updateUI() {
+  // Scores
+  document.getElementById('score1').textContent = state.scores[0];
+  document.getElementById('score2').textContent = state.scores[1];
+  // Inning
+  document.getElementById('inningDisplay').textContent =
+    `${state.inning}회 ${state.half === 0 ? '초' : '말'}`;
+  // Balls
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`b${i}`).className = 'dot' + (i < state.balls ? ' ball' : '');
+  }
+  // Strikes
+  for (let i = 0; i < 2; i++) {
+    document.getElementById(`s${i}`).className = 'dot' + (i < state.strikes ? ' strike' : '');
+  }
+  // Outs
+  for (let i = 0; i < 2; i++) {
+    document.getElementById(`o${i}`).className = 'dot' + (i < state.outs ? ' out' : '');
+  }
+  // Bases
+  document.getElementById('base1').classList.toggle('on', state.bases[0]);
+  document.getElementById('base2').classList.toggle('on', state.bases[1]);
+  document.getElementById('base3').classList.toggle('on', state.bases[2]);
+  // Player names
+  document.getElementById('pitcherName').textContent = state.currentPitcher.name;
+  document.getElementById('pitcherStats').textContent =
+    `구속 ${state.currentPitcher.speed} | 변화 ${state.currentPitcher.curve} | 구위 ${state.currentPitcher.power} | 제구 ${state.currentPitcher.control}`;
+  document.getElementById('batterName').textContent = state.currentBatter.name;
+  document.getElementById('batterStats').textContent =
+    `파워 ${state.currentBatter.power} | 정확 ${state.currentBatter.contact} | 선구 ${state.currentBatter.eye} | 주루 ${state.currentBatter.speed}`;
+
+  if (state.phase === 'pitcher_type') renderPitchTypes();
+}
+
+// ===== BATTER SETTINGS =====
+function setHeight(v) {
+  state.batterHeight = v;
+  ['high','mid','low'].forEach(h => {
+    document.getElementById(h+'Btn').classList.toggle('selected', h === v);
+  });
+}
+function setDir(v) {
+  state.batterDir = v;
+  ['pull','straight','push'].forEach(d => {
+    document.getElementById(d+'Btn').classList.toggle('selected', d === v);
+  });
+}
+
+// ===== RESULT POPUP =====
+let resultTimeout;
+function showResult(emoji, text, sub) {
+  const overlay = document.getElementById('resultOverlay');
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultText').textContent = text;
+  document.getElementById('resultSub').textContent = sub;
+  overlay.classList.add('show');
+  clearTimeout(resultTimeout);
+  resultTimeout = setTimeout(() => {
+    overlay.classList.remove('show');
+    setPhase('pitcher_type');
+    updateUI();
+  }, 1800);
+}
+
+// ===== LOG =====
+function addLog(msg) {
+  const container = document.getElementById('logEntries');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.textContent = msg;
+  container.insertBefore(entry, container.firstChild);
+  if (container.children.length > 20) container.removeChild(container.lastChild);
+}
+
+// ===== END GAME =====
+function endGame() {
+  const winner = state.scores[0] > state.scores[1] ? '1P' : state.scores[1] > state.scores[0] ? '2P' : '무승부';
+  showResult('🏆', winner === '무승부' ? '무승부!' : `${winner} 승리!`, `최종 ${state.scores[0]} : ${state.scores[1]}`);
+  addLog(`=== 경기 종료 ${state.scores[0]} : ${state.scores[1]} ===`);
+}
+
+// ===== START =====
+init();
+setPhase('pitcher_type');
+addLog('--- 1회 초 ---');
+</script>
+</body>
+</html>
